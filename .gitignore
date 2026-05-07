@@ -1,0 +1,48 @@
+# ── Entorno virtual ──
+venv/
+.venv/
+env/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ── Variables de entorno ──
+.env
+!.env.example
+
+# ── Flask / instancia ──
+instance/
+*.db
+*.sqlite3
+
+# ── Editores / IDEs ──
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ── Logs y temporales ──
+*.log
+*.tmp
+*.bak
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Pytest / coverage ──
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
