@@ -1,59 +1,186 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>K-Means · Mall Customers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    :root { --accent: #6366f1; --accent-soft: #818cf8; }
-    body  { background: #0d1117; }
+    :root {
+      --accent:      #4361ee;
+      --accent-soft: #7b8fd4;
+      --accent-bg:   #eef0fd;
+      --surface:     #f7f8fc;
+      --text:        #1e293b;
+      --muted:       #64748b;
+      --border:      #e2e8f0;
+      --ok:          #16a34a;
+      --warn:        #d97706;
+    }
+
+    /* ── BASE ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 400;
+      background: #ffffff;
+      color: var(--text);
+      font-size: .94rem;
+      line-height: 1.75;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      color: var(--text);
+    }
+    strong { font-weight: 600; }
+    code {
+      font-size: .82em;
+      background: var(--surface);
+      padding: .1em .45em;
+      border-radius: 4px;
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
 
     /* ── NAV ── */
-    .navbar { background: rgba(13,17,23,.95) !important; backdrop-filter: blur(10px); border-bottom: 1px solid #30363d; }
-    .navbar-brand { color: var(--accent-soft) !important; font-weight: 700; }
-    .nav-link { font-size: .83rem; padding: .35rem .7rem !important; border-radius: 6px; }
-    .nav-link:hover, .nav-link.active { background: #21262d; color: #fff !important; }
+    .navbar {
+      background: rgba(255,255,255,.96) !important;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--accent) !important;
+      letter-spacing: -.3px;
+    }
+    .nav-link {
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--muted) !important;
+      padding: .3rem .7rem !important;
+      border-radius: 6px;
+      transition: all .18s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--accent) !important;
+      background: var(--accent-bg);
+    }
 
     /* ── HERO ── */
     .hero {
-      padding: 5rem 0 4rem;
-      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,.18) 0%, transparent 70%);
+      padding: 5.5rem 0 4.5rem;
+      background: linear-gradient(160deg, #f0f3ff 0%, #ffffff 55%);
       text-align: center;
     }
-    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -.5px; }
-    .hero h1 span { color: var(--accent-soft); }
-    .hero .lead { color: #8b949e; }
+    .hero h1 {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      letter-spacing: -.5px;
+      line-height: 1.2;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero .lead { color: var(--muted); font-weight: 300; font-size: 1.05rem; }
+    .hero-badge {
+      display: inline-flex; align-items: center;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: .3rem .9rem;
+      font-size: .78rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .hero-badge b { color: var(--text); margin-right: .25rem; }
 
     /* ── SECTIONS ── */
-    section { padding: 4rem 0; border-top: 1px solid #21262d; }
-    .section-tag { font-size: .72rem; font-weight: 700; color: var(--accent-soft); text-transform: uppercase; letter-spacing: .1em; }
-    .section-title { font-size: clamp(1.3rem, 2.5vw, 1.9rem); font-weight: 700; }
-    .section-lead { color: #8b949e; }
+    section { padding: 4.5rem 0; }
+    section:nth-child(even) { background: var(--surface); }
+    .section-tag {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .15em;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+      margin-bottom: .5rem;
+    }
+    .section-lead { color: var(--muted); font-weight: 300; }
 
-    /* ── CARDS ── */
-    .card { background: #161b22 !important; border-color: #30363d !important; border-radius: 12px !important; }
-    .card-header { background: #21262d !important; border-color: #30363d !important; font-size: .8rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; }
+    /* ── FLAT BLOCKS (sin tarjetas) ── */
+    .block {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    section:nth-child(even) .block { background: #fff; }
+    section:nth-child(odd)  .block { background: var(--surface); }
+
+    .block-header {
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      padding-bottom: .75rem;
+      margin-bottom: .75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
 
     /* ── STAT ── */
-    .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; }
-    .stat-lbl { font-size: .72rem; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; margin-top: .25rem; }
-    .stat-sub { font-size: .78rem; color: #8b949e; }
+    .stat-num { font-size: 2rem; font-weight: 700; line-height: 1; font-family: 'Inter', sans-serif; }
+    .stat-lbl { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-top: .25rem; }
+    .stat-sub { font-size: .75rem; color: var(--muted); }
+
+    /* ── ICON FEATURE ── */
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--accent-bg);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 1.2rem; flex-shrink: 0;
+    }
 
     /* ── STEPS ── */
-    .step-circle {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--accent); display: flex; align-items: center;
-      justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0;
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── SECTION LABEL (3.1, 3.2…) ── */
+    .sub-label {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-size: .8rem; font-weight: 600; color: var(--accent);
+      background: var(--accent-bg);
+      padding: .25rem .75rem; border-radius: 99px;
+      margin-bottom: 1rem;
     }
 
     /* ── CODE ── */
     pre {
-      background: #010409; border: 1px solid #30363d; border-radius: 10px;
-      padding: 1.2rem 1.4rem; font-size: .8rem; line-height: 1.7; overflow-x: auto;
-      font-family: 'Cascadia Code','Fira Code','Consolas', monospace; color: #c9d1d9;
+      background: #1a1f2e;
+      border-radius: 10px;
+      padding: 1.3rem 1.5rem;
+      font-size: .8rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      font-family: 'Cascadia Code','Fira Code','Consolas', monospace;
+      color: #c9d1d9;
+      border: none;
     }
     .kw { color: #ff7b72; }
     .fn { color: #d2a8ff; }
@@ -62,32 +189,125 @@
     .nu { color: #79c0ff; }
 
     /* ── CHARTS ── */
-    .chart-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 1.25rem; }
-    .chart-lbl  { font-size: .75rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .9rem; }
+    .chart-lbl {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: .35rem;
+    }
 
     /* ── TABLES ── */
-    .table { --bs-table-bg: transparent; --bs-table-border-color: #30363d; font-size: .87rem; }
-    .table thead th { background: #21262d; color: #8b949e; font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; border-color: #30363d; }
-    .table tbody tr:hover td { background: #21262d; }
-    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+    .table {
+      font-size: .85rem;
+      --bs-table-bg: transparent;
+      --bs-table-border-color: var(--border);
+      color: var(--text);
+    }
+    .table thead th {
+      background: var(--surface);
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border-color: var(--border);
+      padding: .65rem 1rem;
+    }
+    .table tbody td { padding: .65rem 1rem; border-color: var(--border); vertical-align: middle; }
+    .table tbody tr:hover td { background: #f0f3ff; }
+    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+
+    /* ── STATUS ICONS ── */
+    .check-ok   { color: var(--ok); }
+    .check-warn { color: var(--warn); }
+    .check-info { color: var(--accent); }
 
     /* ── INTERP CARDS ── */
-    .interp-card { border-left: 4px solid; background: #161b22; border-radius: 10px; padding: 1.2rem; height: 100%; }
+    .interp-card {
+      border-left: 3px solid;
+      border-radius: 8px;
+      padding: 1.3rem 1.4rem;
+      height: 100%;
+      background: #fff;
+    }
+    section:nth-child(even) .interp-card { background: #fff; }
 
-    /* ── CLEANING ── */
-    .check-ok   { color: #2ecc71; }
-    .check-warn { color: #f39c12; }
-    .check-info { color: var(--accent-soft); }
+    /* ── PARAMS TABLE ── */
+    .param-key {
+      font-family: 'Cascadia Code','Fira Code','Consolas', monospace;
+      font-size: .78rem;
+      color: var(--accent);
+      background: var(--accent-bg);
+      padding: .15rem .5rem;
+      border-radius: 4px;
+    }
 
-    /* ── TABLE CONTROLS ── */
-    #search-input { background: #161b22; border: 1px solid #30363d; color: #e6edf3; border-radius: 8px; padding: .5rem .9rem; font-size: .88rem; width: 100%; max-width: 280px; outline: none; }
-    #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.2); }
-    .page-btn { background: #161b22; border: 1px solid #30363d; color: #8b949e; padding: .3rem .7rem; border-radius: 6px; font-size: .8rem; cursor: pointer; }
-    .page-btn:hover, .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    /* ── KPI HIGHLIGHT ── */
+    .kpi-box {
+      background: var(--accent-bg);
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+    }
+    .kpi-box .stat-num { color: var(--accent); }
+
+    /* ── SEARCH & PAGINATION ── */
+    #search-input {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: .5rem .9rem;
+      font-size: .85rem;
+      width: 100%; max-width: 280px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      transition: border-color .2s;
+    }
+    #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(67,97,238,.12); }
+    .page-btn {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: .3rem .7rem;
+      border-radius: 6px;
+      font-size: .78rem;
+      cursor: pointer;
+      transition: all .18s;
+      font-family: 'Inter', sans-serif;
+    }
+    .page-btn:hover, .page-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── DIVIDER ── */
+    .section-divider { height: 1px; background: var(--border); margin: 2rem 0; }
+
+    /* ── FORMULA ── */
+    .formula {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--accent);
+      padding: .8rem 0;
+      letter-spacing: .03em;
+    }
 
     /* ── FOOTER ── */
-    footer { border-top: 1px solid #21262d; padding: 2.5rem 0; color: #8b949e; font-size: .82rem; text-align: center; }
-    footer a { color: var(--accent-soft); text-decoration: none; }
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0;
+      color: var(--muted);
+      font-size: .8rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -95,8 +315,8 @@
 <!-- ══════════ NAVBAR ══════════ -->
 <nav class="navbar navbar-expand-xl sticky-top">
   <div class="container-xl">
-    <span class="navbar-brand"><i class="bi bi-diagram-3-fill me-1"></i>K-Means</span>
-    <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+    <span class="navbar-brand"><i class="bi bi-diagram-3-fill me-2"></i>K-Means</span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" style="border-color:var(--border)">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navMenu">
@@ -119,16 +339,17 @@
 <!-- ══════════ HERO ══════════ -->
 <header class="hero">
   <div class="container-xl">
-    <h1>Segmentación de clientes con <span>K-Means</span></h1>
-    <p class="lead mt-2 mb-4">Análisis de clustering sobre el dataset <em>Mall Customers</em> — aprendizaje no supervisado</p>
+    <p class="section-tag mb-3">Aprendizaje no supervisado · Mall Customers</p>
+    <h1>Segmentación de clientes<br>con <span>K-Means</span></h1>
+    <p class="lead mt-3 mb-5">Análisis de clustering aplicado al dataset <em>Mall Customers</em></p>
     <div class="d-flex flex-wrap gap-2 justify-content-center">
-      <span class="badge rounded-pill bg-secondary text-light px-3 py-2"><b>{{ total }}</b> clientes</span>
-      <span class="badge rounded-pill bg-secondary text-light px-3 py-2"><b>{{ nClusters }}</b> clústeres</span>
-      <span class="badge rounded-pill bg-secondary text-light px-3 py-2"><b>3</b> variables</span>
-      <span class="badge rounded-pill bg-secondary text-light px-3 py-2">Inercia <b>{{ inertia }}</b></span>
+      <span class="hero-badge"><b>{{ total }}</b> clientes</span>
+      <span class="hero-badge"><b>{{ nClusters }}</b> clústeres</span>
+      <span class="hero-badge"><b>3</b> variables</span>
+      <span class="hero-badge">Inercia <b>{{ inertia }}</b></span>
       {% for c in clusters %}
-      <span class="badge rounded-pill px-3 py-2" style="background:{{ c.color }}22; color:{{ c.color }}; border:1px solid {{ c.color }}44">
-        <b>{{ c.count }}</b> {{ c.label }}
+      <span class="hero-badge" style="border-color:{{ c.color }}44">
+        <b style="color:{{ c.color }}">{{ c.count }}</b> {{ c.label }}
       </span>
       {% endfor %}
     </div>
@@ -139,65 +360,68 @@
 
 <!-- ══════════ 01 · PROBLEMA ══════════ -->
 <section id="problema">
-  <div class="section-tag mb-1">01 · Descripción del problema</div>
-  <h2 class="section-title mb-2">Segmentación de clientes en centros comerciales</h2>
-  <p class="section-lead mb-3">
+  <div class="section-tag mb-2">01 · Descripción del problema</div>
+  <h2 class="section-title">Segmentación de clientes en centros comerciales</h2>
+  <p class="section-lead mb-4">
     En el contexto actual del comercio minorista, los centros comerciales generan diariamente una gran cantidad de datos sobre sus clientes:
     quiénes son, cuánto ganan, cuánto gastan y con qué frecuencia visitan el establecimiento. Sin embargo, disponer de estos datos no
     es suficiente si no se cuenta con herramientas que permitan extraer conocimiento útil de ellos.
   </p>
-  <p class="text-secondary mb-4">
+  <p class="text-secondary mb-5">
     El problema central que aborda este proyecto es la <strong>falta de segmentación estructurada</strong> de los clientes: sin grupos bien definidos,
     las estrategias de marketing son genéricas, poco eficientes y no aprovechan el potencial de personalización que ofrecen los datos disponibles.
     La segmentación permite responder preguntas concretas como: ¿quiénes son los clientes más valiosos?, ¿qué grupos tienen mayor potencial
     de crecimiento?, ¿a quiénes conviene ofrecer descuentos y a quiénes productos premium?
   </p>
 
-  <div class="row g-3 mb-4">
+  <div class="row g-4 mb-5">
     <div class="col-md-4">
-      <div class="card h-100 p-3">
-        <div class="fs-2 mb-2">🎯</div>
-        <h5 class="fw-bold mb-2">Objetivo del proyecto</h5>
-        <p class="text-secondary small mb-0">
-          Aplicar el algoritmo K-Means para identificar de forma automática grupos de clientes con perfiles similares,
-          utilizando únicamente sus características numéricas y sin necesidad de etiquetas previas.
-          El resultado es una segmentación accionable que puede orientar decisiones comerciales.
-        </p>
+      <div class="d-flex gap-3">
+        <div class="feature-icon"><i class="bi bi-bullseye"></i></div>
+        <div>
+          <h6 class="fw-semibold mb-1">Objetivo del proyecto</h6>
+          <p class="text-secondary small mb-0">
+            Aplicar K-Means para identificar automáticamente grupos de clientes con perfiles similares,
+            sin necesidad de etiquetas previas, obteniendo una segmentación accionable para decisiones comerciales.
+          </p>
+        </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card h-100 p-3">
-        <div class="fs-2 mb-2">🤖</div>
-        <h5 class="fw-bold mb-2">¿Por qué aprendizaje no supervisado?</h5>
-        <p class="text-secondary small mb-0">
-          A diferencia de la clasificación supervisada, aquí no existe una variable objetivo predefinida.
-          No se sabe de antemano cuántos grupos hay ni cómo son. El aprendizaje no supervisado permite
-          <em>descubrir</em> esa estructura oculta en los datos a partir de similitudes entre observaciones.
-        </p>
+      <div class="d-flex gap-3">
+        <div class="feature-icon"><i class="bi bi-cpu"></i></div>
+        <div>
+          <h6 class="fw-semibold mb-1">Aprendizaje no supervisado</h6>
+          <p class="text-secondary small mb-0">
+            No existe variable objetivo predefinida. El modelo <em>descubre</em> la estructura oculta en los datos
+            a partir de similitudes entre observaciones, sin intervención humana en la definición de los grupos.
+          </p>
+        </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card h-100 p-3">
-        <div class="fs-2 mb-2">💡</div>
-        <h5 class="fw-bold mb-2">Aplicación práctica (STP)</h5>
-        <p class="text-secondary small mb-0">
-          Los resultados se alinean con el modelo de marketing <strong>STP</strong> (Segmentación, Targeting, Posicionamiento):
-          primero se segmenta la base de clientes, luego se seleccionan los segmentos objetivo y finalmente
-          se diseñan propuestas de valor diferenciadas para cada grupo.
-        </p>
+      <div class="d-flex gap-3">
+        <div class="feature-icon"><i class="bi bi-lightbulb"></i></div>
+        <div>
+          <h6 class="fw-semibold mb-1">Aplicación práctica (STP)</h6>
+          <p class="text-secondary small mb-0">
+            Los resultados se alinean con el modelo de marketing <strong>STP</strong> (Segmentación, Targeting, Posicionamiento):
+            segmentar la base, priorizar los grupos objetivo y diseñar propuestas de valor diferenciadas.
+          </p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card p-4">
-    <h5 class="fw-bold mb-3"><i class="bi bi-bullseye me-2 text-primary"></i>Pregunta de investigación</h5>
-    <p class="text-secondary mb-3">
+  <div class="block p-4">
+    <h6 class="fw-semibold mb-3"><i class="bi bi-chat-square-quote me-2 text-primary"></i>Pregunta de investigación</h6>
+    <p class="text-secondary mb-4">
       Este proyecto busca responder: <strong>¿Es posible identificar grupos de clientes con comportamientos de compra
       diferenciados a partir de variables demográficas y de gasto, usando K-Means?</strong>
     </p>
-    <div class="row g-3">
+    <div class="row g-4">
       <div class="col-md-6">
-        <h6 class="fw-semibold mb-2">Beneficios esperados para el negocio</h6>
+        <p class="fw-semibold small mb-2">Beneficios esperados para el negocio</p>
         <ul class="text-secondary small mb-0 ps-3">
           <li>Diseño de campañas publicitarias personalizadas por segmento</li>
           <li>Optimización de la disposición de tiendas según perfil predominante</li>
@@ -207,11 +431,11 @@
         </ul>
       </div>
       <div class="col-md-6">
-        <h6 class="fw-semibold mb-2">Alcances y limitaciones</h6>
+        <p class="fw-semibold small mb-2">Alcances y limitaciones</p>
         <ul class="text-secondary small mb-0 ps-3">
           <li>El modelo es descriptivo, no predictivo: describe patrones existentes</li>
           <li>K-Means asume clústeres de forma convexa y tamaño similar</li>
-          <li>Los segmentos identificados deben interpretarse con criterio de negocio</li>
+          <li>Los segmentos deben interpretarse con criterio de negocio</li>
           <li>El dataset es estático; en producción requeriría actualización periódica</li>
           <li>No se considera la variable temporal (frecuencia de visitas)</li>
         </ul>
@@ -222,321 +446,288 @@
 
 <!-- ══════════ 02 · DATASET ══════════ -->
 <section id="dataset">
-  <div class="section-tag mb-1">02 · Explicación del dataset</div>
-  <h2 class="section-title mb-2">Mall Customers Dataset</h2>
+  <div class="section-tag mb-2">02 · Explicación del dataset</div>
+  <h2 class="section-title">Mall Customers Dataset</h2>
   <p class="section-lead mb-3">
     El <em>Mall Customers Dataset</em> es un conjunto de datos público ampliamente utilizado en ejercicios de aprendizaje no supervisado.
     Contiene información de <strong>{{ total }} clientes</strong> registrados en un centro comercial, recopilada a partir de tarjetas de membresía.
     Aunque es un dataset sintético diseñado con fines didácticos, representa de forma realista las variables que un mall podría
     recolectar en su operación diaria.
   </p>
-  <p class="text-secondary mb-4">
+  <p class="text-secondary mb-5">
     Para este proyecto, el dataset fue obtenido desde un repositorio público en GitHub y cargado directamente en tiempo de ejecución.
     Su reducido tamaño (200 registros, 5 columnas) lo hace ideal para explorar técnicas de clustering sin necesidad de infraestructura costosa,
     permitiendo centrarnos en la comprensión del algoritmo y la interpretación de los resultados.
   </p>
 
-  <div class="row g-3 mb-4">
+  <div class="row g-4 mb-5">
     <div class="col-lg-8">
-      <div class="card h-100">
-        <div class="card-header"><i class="bi bi-table me-1"></i>Descripción detallada de las variables</div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm mb-0">
-              <thead><tr><th>Variable</th><th>Tipo</th><th>Rango</th><th>Descripción e interpretación</th><th>Uso</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td><code>CustomerID</code></td>
-                  <td><span class="text-info">int</span></td>
-                  <td class="text-secondary">1 – 200</td>
-                  <td class="text-secondary small">Número de identificación único asignado a cada cliente. No aporta información sobre comportamiento ni perfil.</td>
-                  <td><span class="badge bg-secondary">Excluida</span></td>
-                </tr>
-                <tr>
-                  <td><code>Gender</code></td>
-                  <td><span class="text-warning">str</span></td>
-                  <td class="text-secondary">Male / Female</td>
-                  <td class="text-secondary small">Género del cliente. Variable nominal binaria. Se excluyó del modelo para evitar sesgos de escala en la distancia euclidiana.</td>
-                  <td><span class="badge bg-secondary">Excluida</span></td>
-                </tr>
-                <tr>
-                  <td><code>Age</code></td>
-                  <td><span class="text-info">int</span></td>
-                  <td class="text-secondary">{{ stats.age_min }} – {{ stats.age_max }}</td>
-                  <td class="text-secondary small">Edad del cliente en años. Refleja la etapa de vida y los patrones de consumo asociados a cada generación.</td>
-                  <td><span class="badge bg-success">✓ Incluida</span></td>
-                </tr>
-                <tr>
-                  <td><code>Annual Income (k$)</code></td>
-                  <td><span class="text-info">int</span></td>
-                  <td class="text-secondary">{{ stats.income_min }} – {{ stats.income_max }} k$</td>
-                  <td class="text-secondary small">Ingreso anual del cliente expresado en miles de dólares. Determina la capacidad económica y el tipo de productos accesibles.</td>
-                  <td><span class="badge bg-success">✓ Incluida</span></td>
-                </tr>
-                <tr>
-                  <td><code>Spending Score</code></td>
-                  <td><span class="text-info">int</span></td>
-                  <td class="text-secondary">{{ stats.score_min }} – {{ stats.score_max }}</td>
-                  <td class="text-secondary small">Puntaje de 1 a 100 asignado por el mall según la frecuencia, el monto y el comportamiento de compra observado. Es la variable más directamente ligada al valor del cliente.</td>
-                  <td><span class="badge bg-success">✓ Incluida</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div class="block-header"><i class="bi bi-table"></i>Descripción detallada de las variables</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Variable</th><th>Tipo</th><th>Rango</th><th>Descripción e interpretación</th><th>Uso</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>CustomerID</code></td>
+              <td><span class="text-primary fw-semibold small">int</span></td>
+              <td class="text-secondary small">1 – 200</td>
+              <td class="text-secondary small">Número de identificación único. No aporta información sobre comportamiento ni perfil.</td>
+              <td><span class="badge rounded-pill" style="background:#fee2e2; color:#b91c1c; font-weight:500">Excluida</span></td>
+            </tr>
+            <tr>
+              <td><code>Gender</code></td>
+              <td><span class="text-warning fw-semibold small">str</span></td>
+              <td class="text-secondary small">Male / Female</td>
+              <td class="text-secondary small">Género del cliente. Variable nominal binaria. Excluida para evitar sesgos de escala en la distancia euclidiana.</td>
+              <td><span class="badge rounded-pill" style="background:#fee2e2; color:#b91c1c; font-weight:500">Excluida</span></td>
+            </tr>
+            <tr>
+              <td><code>Age</code></td>
+              <td><span class="text-primary fw-semibold small">int</span></td>
+              <td class="text-secondary small">{{ stats.age_min }} – {{ stats.age_max }}</td>
+              <td class="text-secondary small">Edad en años. Refleja la etapa de vida y los patrones de consumo asociados a cada generación.</td>
+              <td><span class="badge rounded-pill" style="background:#dcfce7; color:#15803d; font-weight:500">Incluida</span></td>
+            </tr>
+            <tr>
+              <td><code>Annual Income (k$)</code></td>
+              <td><span class="text-primary fw-semibold small">int</span></td>
+              <td class="text-secondary small">{{ stats.income_min }} – {{ stats.income_max }} k$</td>
+              <td class="text-secondary small">Ingreso anual en miles de dólares. Determina la capacidad económica y el tipo de productos accesibles.</td>
+              <td><span class="badge rounded-pill" style="background:#dcfce7; color:#15803d; font-weight:500">Incluida</span></td>
+            </tr>
+            <tr>
+              <td><code>Spending Score</code></td>
+              <td><span class="text-primary fw-semibold small">int</span></td>
+              <td class="text-secondary small">{{ stats.score_min }} – {{ stats.score_max }}</td>
+              <td class="text-secondary small">Puntaje de gasto (1–100) asignado por el mall. Variable más directamente ligada al valor del cliente.</td>
+              <td><span class="badge rounded-pill" style="background:#dcfce7; color:#15803d; font-weight:500">Incluida</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="col-lg-4">
-      <div class="card h-100">
-        <div class="card-header"><i class="bi bi-bar-chart me-1"></i>Estadísticas descriptivas</div>
-        <div class="card-body">
-          <div class="row g-3 text-center">
-            <div class="col-6">
-              <div class="stat-num" style="font-size:1.4rem">{{ stats.age_mean }}</div>
-              <div class="stat-lbl">Edad media</div>
-              <div class="stat-sub">{{ stats.age_min }}–{{ stats.age_max }} años</div>
-            </div>
-            <div class="col-6">
-              <div class="stat-num" style="font-size:1.4rem">{{ stats.income_mean }}k</div>
-              <div class="stat-lbl">Ingreso medio</div>
-              <div class="stat-sub">{{ stats.income_min }}–{{ stats.income_max }} k$</div>
-            </div>
-            <div class="col-6">
-              <div class="stat-num" style="font-size:1.4rem">{{ stats.score_mean }}</div>
-              <div class="stat-lbl">Score medio</div>
-              <div class="stat-sub">{{ stats.score_min }}–{{ stats.score_max }}</div>
-            </div>
-            <div class="col-6">
-              <div class="stat-num" style="font-size:1.4rem; color:var(--accent-soft)">{{ total }}</div>
-              <div class="stat-lbl">Total registros</div>
-            </div>
-            <div class="col-6">
-              <div class="stat-num" style="font-size:1.4rem; color:#ec4899">{{ stats.genero_f }}</div>
-              <div class="stat-lbl">Clientes femeninas</div>
-              <div class="stat-sub">{{ "%.0f"|format(stats.genero_f / total * 100) }}% del total</div>
-            </div>
-            <div class="col-6">
-              <div class="stat-num" style="font-size:1.4rem; color:#3b82f6">{{ stats.genero_m }}</div>
-              <div class="stat-lbl">Clientes masculinos</div>
-              <div class="stat-sub">{{ "%.0f"|format(stats.genero_m / total * 100) }}% del total</div>
-            </div>
-          </div>
+      <div class="block-header"><i class="bi bi-bar-chart-line"></i>Estadísticas descriptivas</div>
+      <div class="row g-3 text-center">
+        <div class="col-6">
+          <div class="stat-num">{{ stats.age_mean }}</div>
+          <div class="stat-lbl">Edad media</div>
+          <div class="stat-sub">{{ stats.age_min }}–{{ stats.age_max }} años</div>
+        </div>
+        <div class="col-6">
+          <div class="stat-num">{{ stats.income_mean }}k</div>
+          <div class="stat-lbl">Ingreso medio</div>
+          <div class="stat-sub">{{ stats.income_min }}–{{ stats.income_max }} k$</div>
+        </div>
+        <div class="col-6">
+          <div class="stat-num">{{ stats.score_mean }}</div>
+          <div class="stat-lbl">Score medio</div>
+          <div class="stat-sub">{{ stats.score_min }}–{{ stats.score_max }}</div>
+        </div>
+        <div class="col-6">
+          <div class="stat-num" style="color:var(--accent)">{{ total }}</div>
+          <div class="stat-lbl">Total registros</div>
+        </div>
+        <div class="col-6">
+          <div class="stat-num" style="color:#db2777">{{ stats.genero_f }}</div>
+          <div class="stat-lbl">Femenino</div>
+          <div class="stat-sub">{{ "%.0f"|format(stats.genero_f / total * 100) }}% del total</div>
+        </div>
+        <div class="col-6">
+          <div class="stat-num" style="color:#2563eb">{{ stats.genero_m }}</div>
+          <div class="stat-lbl">Masculino</div>
+          <div class="stat-sub">{{ "%.0f"|format(stats.genero_m / total * 100) }}% del total</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-3">
+  <div class="row g-4">
     <div class="col-md-6">
-      <div class="card p-3 h-100">
-        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Contexto del Spending Score</h6>
-        <p class="text-secondary small mb-0">
-          El <em>Spending Score</em> es una métrica compuesta creada internamente por el mall. No se trata de un dato
-          directamente observable como la edad o el ingreso, sino de un indicador calculado a partir del historial
-          de compras del cliente: frecuencia de visitas, ticket promedio y tipos de tiendas frecuentadas.
-          Un score alto (cercano a 100) indica un cliente muy activo y con alto gasto; uno bajo refleja
-          visitas esporádicas o compras de bajo valor. Esta variable es clave porque representa
-          <strong>el comportamiento real</strong>, no solo el potencial económico.
-        </p>
-      </div>
+      <p class="fw-semibold mb-2"><i class="bi bi-info-circle me-2" style="color:var(--accent)"></i>Contexto del Spending Score</p>
+      <p class="text-secondary small mb-0">
+        El <em>Spending Score</em> es una métrica compuesta creada internamente por el mall. No se trata de un dato
+        directamente observable como la edad o el ingreso, sino de un indicador calculado a partir del historial
+        de compras del cliente: frecuencia de visitas, ticket promedio y tipos de tiendas frecuentadas.
+        Un score alto indica un cliente muy activo y con alto gasto. Esta variable es clave porque representa
+        <strong>el comportamiento real</strong>, no solo el potencial económico.
+      </p>
     </div>
     <div class="col-md-6">
-      <div class="card p-3 h-100">
-        <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>Consideraciones sobre el dataset</h6>
-        <p class="text-secondary small mb-0">
-          Si bien el dataset es ampliamente utilizado en la literatura de machine learning, es importante
-          reconocer sus limitaciones: los datos son sintéticos y no reflejan un caso real verificado,
-          no incluye variables temporales (como fecha de las compras), y no captura información sobre
-          los productos adquiridos. Además, con solo 200 registros, los resultados no son estadísticamente
-          generalizables a poblaciones reales. No obstante, para el propósito didáctico de este proyecto —
-          comprender e implementar K-Means — el dataset es completamente adecuado.
-        </p>
-      </div>
+      <p class="fw-semibold mb-2"><i class="bi bi-exclamation-circle me-2 text-warning"></i>Consideraciones sobre el dataset</p>
+      <p class="text-secondary small mb-0">
+        Si bien el dataset es ampliamente utilizado en la literatura de machine learning, es importante
+        reconocer sus limitaciones: los datos son sintéticos, no incluye variables temporales (como fecha de
+        las compras), y no captura información sobre los productos adquiridos. Con 200 registros, los resultados
+        no son estadísticamente generalizables, pero para el propósito didáctico de este proyecto el dataset
+        es completamente adecuado.
+      </p>
     </div>
   </div>
 </section>
 
 <!-- ══════════ 03 · PREPARACIÓN ══════════ -->
 <section id="preparacion">
-  <div class="section-tag mb-1">03 · Preparación de datos</div>
-  <h2 class="section-title mb-2">Limpieza, selección y normalización</h2>
-  <p class="section-lead mb-4">Antes de entrenar el modelo se realizó una etapa completa de preparación para garantizar la calidad e idoneidad de los datos.</p>
+  <div class="section-tag mb-2">03 · Preparación de datos</div>
+  <h2 class="section-title">Limpieza, selección y normalización</h2>
+  <p class="section-lead mb-5">Antes de entrenar el modelo se realizó una etapa completa de preparación para garantizar la calidad e idoneidad de los datos.</p>
 
-  <!-- ── 3.1 Limpieza básica ── -->
-  <h5 class="fw-semibold mb-3"><span class="badge rounded-pill me-2" style="background:#6366f122; color:var(--accent-soft); border:1px solid #6366f144">3.1</span>Limpieza básica</h5>
-  <div class="row g-3 mb-4">
+  <!-- 3.1 -->
+  <div class="sub-label"><i class="bi bi-check2-square"></i> 3.1 — Limpieza básica</div>
+  <div class="row g-4 mb-5">
     <div class="col-md-4">
-      <div class="card h-100 p-3">
-        <div class="d-flex align-items-center gap-2 mb-3">
-          <i class="bi bi-file-earmark-text fs-4 check-info"></i>
-          <h6 class="mb-0 fw-bold">Dimensiones originales</h6>
-        </div>
-        <div class="d-flex justify-content-between text-secondary small mb-1">
-          <span>Filas</span><strong class="text-light">{{ reporte.filas_originales }}</strong>
-        </div>
-        <div class="d-flex justify-content-between text-secondary small mb-1">
-          <span>Columnas</span><strong class="text-light">{{ reporte.columnas | length }}</strong>
-        </div>
-        <div class="d-flex justify-content-between text-secondary small">
-          <span>Filas tras limpieza</span><strong class="text-light">{{ reporte.filas_limpias }}</strong>
-        </div>
-        {% if reporte.filas_eliminadas == 0 %}
-        <div class="mt-3 small check-ok"><i class="bi bi-check-circle-fill me-1"></i>No se eliminó ninguna fila</div>
-        {% else %}
-        <div class="mt-3 small check-warn"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ reporte.filas_eliminadas }} filas eliminadas</div>
-        {% endif %}
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 p-3">
-        <div class="d-flex align-items-center gap-2 mb-3">
-          <i class="bi bi-question-circle fs-4 check-info"></i>
-          <h6 class="mb-0 fw-bold">Valores nulos</h6>
-        </div>
-        {% for col, cnt in reporte.nulos.items() %}
-        <div class="d-flex justify-content-between text-secondary small mb-1">
-          <span><code>{{ col }}</code></span>
-          {% if cnt == 0 %}
-          <span class="check-ok"><i class="bi bi-check-lg"></i> 0</span>
+      <div class="d-flex gap-3 align-items-start">
+        <div class="feature-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <p class="fw-semibold small mb-2">Dimensiones originales</p>
+          <div class="d-flex justify-content-between text-secondary small mb-1">
+            <span>Filas</span><strong>{{ reporte.filas_originales }}</strong>
+          </div>
+          <div class="d-flex justify-content-between text-secondary small mb-1">
+            <span>Columnas</span><strong>{{ reporte.columnas | length }}</strong>
+          </div>
+          <div class="d-flex justify-content-between text-secondary small mb-2">
+            <span>Filas tras limpieza</span><strong>{{ reporte.filas_limpias }}</strong>
+          </div>
+          {% if reporte.filas_eliminadas == 0 %}
+          <span class="small check-ok"><i class="bi bi-check-circle me-1"></i>Sin filas eliminadas</span>
           {% else %}
-          <span class="check-warn"><i class="bi bi-exclamation-lg"></i> {{ cnt }}</span>
+          <span class="small check-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ reporte.filas_eliminadas }} eliminadas</span>
           {% endif %}
         </div>
-        {% endfor %}
-        {% if reporte.total_nulos == 0 %}
-        <div class="mt-2 small check-ok"><i class="bi bi-check-circle-fill me-1"></i>Dataset completo, sin valores faltantes</div>
-        {% endif %}
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card h-100 p-3">
-        <div class="d-flex align-items-center gap-2 mb-3">
-          <i class="bi bi-copy fs-4 check-info"></i>
-          <h6 class="mb-0 fw-bold">Registros duplicados</h6>
-        </div>
-        <div class="text-center py-3">
-          <div class="stat-num" style="font-size:3rem; {% if reporte.duplicados == 0 %}color:#2ecc71{% else %}color:#f39c12{% endif %}">
-            {{ reporte.duplicados }}
+      <div class="d-flex gap-3 align-items-start">
+        <div class="feature-icon"><i class="bi bi-question-circle"></i></div>
+        <div style="flex:1">
+          <p class="fw-semibold small mb-2">Valores nulos por columna</p>
+          {% for col, cnt in reporte.nulos.items() %}
+          <div class="d-flex justify-content-between text-secondary small mb-1">
+            <span><code>{{ col }}</code></span>
+            {% if cnt == 0 %}
+            <span class="check-ok"><i class="bi bi-check-lg"></i> 0</span>
+            {% else %}
+            <span class="check-warn">{{ cnt }}</span>
+            {% endif %}
           </div>
-          <div class="stat-lbl mt-1">duplicados encontrados</div>
+          {% endfor %}
+          {% if reporte.total_nulos == 0 %}
+          <div class="mt-2 small check-ok"><i class="bi bi-check-circle me-1"></i>Dataset completo</div>
+          {% endif %}
         </div>
-        {% if reporte.duplicados == 0 %}
-        <div class="small check-ok text-center"><i class="bi bi-check-circle-fill me-1"></i>No hay registros duplicados</div>
-        {% else %}
-        <div class="small check-warn text-center"><i class="bi bi-exclamation-triangle-fill me-1"></i>Duplicados eliminados</div>
-        {% endif %}
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="d-flex gap-3 align-items-start">
+        <div class="feature-icon"><i class="bi bi-copy"></i></div>
+        <div>
+          <p class="fw-semibold small mb-2">Registros duplicados</p>
+          <div class="stat-num mb-1" style="font-size:2.5rem; color:{% if reporte.duplicados == 0 %}var(--ok){% else %}var(--warn){% endif %}">{{ reporte.duplicados }}</div>
+          <div class="stat-lbl mb-2">duplicados encontrados</div>
+          {% if reporte.duplicados == 0 %}
+          <span class="small check-ok"><i class="bi bi-check-circle me-1"></i>Sin duplicados</span>
+          {% else %}
+          <span class="small check-warn"><i class="bi bi-exclamation-triangle me-1"></i>Eliminados</span>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ── 3.2 Outliers ── -->
-  <h5 class="fw-semibold mb-3"><span class="badge rounded-pill me-2" style="background:#6366f122; color:var(--accent-soft); border:1px solid #6366f144">3.2</span>Análisis de valores atípicos (método IQR)</h5>
-  <div class="card mb-4">
-    <div class="card-header"><i class="bi bi-graph-up me-1"></i>Detección por rango intercuartílico — límites: Q1 − 1.5·IQR / Q3 + 1.5·IQR</div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
+  <!-- 3.2 -->
+  <div class="sub-label"><i class="bi bi-graph-up"></i> 3.2 — Análisis de valores atípicos (IQR)</div>
+  <div class="table-responsive mb-5">
+    <table class="table table-sm">
+      <thead>
+        <tr><th>Variable</th><th>Q1</th><th>Q3</th><th>IQR</th><th>Límite inferior</th><th>Límite superior</th><th>Outliers</th><th>Acción tomada</th></tr>
+      </thead>
+      <tbody>
+        {% for o in reporte.outliers %}
+        <tr>
+          <td><code>{{ o.col }}</code></td>
+          <td>{{ o.Q1 }}</td><td>{{ o.Q3 }}</td><td>{{ o.IQR }}</td>
+          <td>{{ o.lower }}</td><td>{{ o.upper }}</td>
+          <td>
+            {% if o.n_outliers == 0 %}
+            <span class="badge rounded-pill" style="background:#dcfce7; color:#15803d">0</span>
+            {% else %}
+            <span class="badge rounded-pill" style="background:#fef9c3; color:#a16207">{{ o.n_outliers }}</span>
+            {% endif %}
+          </td>
+          <td class="text-secondary small">{{ o.accion }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3.3 -->
+  <div class="sub-label"><i class="bi bi-funnel"></i> 3.3 — Selección de variables</div>
+  <div class="row g-4 mb-5">
+    <div class="col-lg-5">
+      <p class="fw-semibold small text-danger mb-3"><i class="bi bi-x-circle me-1"></i>Variables excluidas</p>
+      <div class="d-flex flex-column gap-3">
+        {% for v in reporte.vars_excluidas %}
+        <div class="d-flex gap-3 align-items-start">
+          <span class="badge mt-1 flex-shrink-0 rounded-pill" style="background:#fee2e2; color:#b91c1c">Excluida</span>
+          <div>
+            <div class="fw-semibold small"><code>{{ v.nombre }}</code> <span class="text-secondary fw-normal">· {{ v.tipo }}</span></div>
+            <div class="text-secondary small mt-1">{{ v.razon }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <p class="fw-semibold small" style="color:var(--ok)"><i class="bi bi-check-circle me-1"></i>Variables seleccionadas para el modelo</p>
+      <div class="d-flex flex-column gap-3 mt-3">
+        {% for v in reporte.vars_seleccionadas %}
+        <div class="d-flex gap-3 align-items-start">
+          <span class="badge mt-1 flex-shrink-0 rounded-pill" style="background:#dcfce7; color:#15803d">Incluida</span>
+          <div>
+            <div class="fw-semibold small">
+              <code>{{ v.nombre }}</code>
+              <span class="text-secondary fw-normal ms-2">· {{ v.significado }}</span>
+              <span class="badge rounded-pill bg-light text-secondary border ms-2">{{ v.rango }}</span>
+              <span class="text-secondary fw-normal ms-1 small">media: {{ v.media }}</span>
+            </div>
+            <div class="text-secondary small mt-1">{{ v.razon }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.4 -->
+  <div class="sub-label"><i class="bi bi-arrows-angle-contract"></i> 3.4 — Normalización · {{ reporte.normalizacion.metodo }}</div>
+  <div class="row g-4">
+    <div class="col-md-5">
+      <p class="fw-semibold small mb-2">¿Por qué es necesario escalar?</p>
+      <p class="text-secondary small mb-3">{{ reporte.normalizacion.razon }}</p>
+      <div class="formula">{{ reporte.normalizacion.formula }}</div>
+      <p class="text-secondary small text-center mt-1">donde μ = media y σ = desviación estándar por columna</p>
+    </div>
+    <div class="col-md-7">
+      <p class="fw-semibold small mb-3">Escalas originales vs. después del escalado</p>
+      <div class="table-responsive mb-3">
         <table class="table table-sm mb-0">
-          <thead>
-            <tr><th>Variable</th><th>Q1</th><th>Q3</th><th>IQR</th><th>Límite inferior</th><th>Límite superior</th><th>Outliers</th><th>Acción tomada</th></tr>
-          </thead>
+          <thead><tr><th>Variable</th><th>Rango original</th><th>Tras StandardScaler</th></tr></thead>
           <tbody>
-            {% for o in reporte.outliers %}
+            {% for v in reporte.vars_seleccionadas %}
             <tr>
-              <td><code>{{ o.col }}</code></td>
-              <td>{{ o.Q1 }}</td><td>{{ o.Q3 }}</td><td>{{ o.IQR }}</td>
-              <td>{{ o.lower }}</td><td>{{ o.upper }}</td>
-              <td>
-                {% if o.n_outliers == 0 %}
-                <span class="badge bg-success">0</span>
-                {% else %}
-                <span class="badge bg-warning text-dark">{{ o.n_outliers }}</span>
-                {% endif %}
-              </td>
-              <td class="text-secondary small">{{ o.accion }}</td>
+              <td><code>{{ v.nombre }}</code></td>
+              <td><span style="color:var(--warn)" class="small fw-semibold">{{ v.rango }}</span></td>
+              <td><span style="color:var(--ok)" class="small fw-semibold">media ≈ 0, std ≈ 1</span></td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
-
-  <!-- ── 3.3 Selección de variables ── -->
-  <h5 class="fw-semibold mb-3"><span class="badge rounded-pill me-2" style="background:#6366f122; color:var(--accent-soft); border:1px solid #6366f144">3.3</span>Selección de variables</h5>
-  <div class="row g-3 mb-4">
-    <div class="col-lg-5">
-      <div class="card h-100">
-        <div class="card-header text-danger-emphasis"><i class="bi bi-x-circle me-1"></i>Variables excluidas</div>
-        <div class="card-body d-flex flex-column gap-3">
-          {% for v in reporte.vars_excluidas %}
-          <div class="d-flex gap-3 align-items-start">
-            <span class="badge bg-danger mt-1 flex-shrink-0">Excluida</span>
-            <div>
-              <div class="fw-semibold small"><code>{{ v.nombre }}</code> <span class="text-secondary fw-normal">· {{ v.tipo }}</span></div>
-              <div class="text-secondary small mt-1">{{ v.razon }}</div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-7">
-      <div class="card h-100">
-        <div class="card-header text-success-emphasis"><i class="bi bi-check-circle me-1"></i>Variables seleccionadas para el modelo</div>
-        <div class="card-body d-flex flex-column gap-3">
-          {% for v in reporte.vars_seleccionadas %}
-          <div class="d-flex gap-3 align-items-start">
-            <span class="badge bg-success mt-1 flex-shrink-0">Incluida</span>
-            <div>
-              <div class="fw-semibold small">
-                <code>{{ v.nombre }}</code>
-                <span class="text-secondary fw-normal ms-2">· {{ v.significado }}</span>
-                <span class="badge bg-secondary ms-2">{{ v.rango }}</span>
-                <span class="text-secondary fw-normal ms-1">media: {{ v.media }}</span>
-              </div>
-              <div class="text-secondary small mt-1">{{ v.razon }}</div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── 3.4 Normalización ── -->
-  <h5 class="fw-semibold mb-3"><span class="badge rounded-pill me-2" style="background:#6366f122; color:var(--accent-soft); border:1px solid #6366f144">3.4</span>Normalización — {{ reporte.normalizacion.metodo }}</h5>
-  <div class="row g-3">
-    <div class="col-md-5">
-      <div class="card h-100 p-3">
-        <h6 class="fw-bold mb-2">¿Por qué es necesario escalar?</h6>
-        <p class="text-secondary small mb-3">{{ reporte.normalizacion.razon }}</p>
-        <div class="text-center py-2">
-          <code class="fs-5" style="color:var(--accent-soft)">{{ reporte.normalizacion.formula }}</code>
-          <div class="text-secondary small mt-1">donde μ = media y σ = desviación estándar de cada columna</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-7">
-      <div class="card h-100 p-3">
-        <h6 class="fw-bold mb-3">Escalas originales vs. después del escalado</h6>
-        <div class="table-responsive">
-          <table class="table table-sm mb-0">
-            <thead><tr><th>Variable</th><th>Rango original</th><th>Tras StandardScaler</th></tr></thead>
-            <tbody>
-              {% for v in reporte.vars_seleccionadas %}
-              <tr>
-                <td><code>{{ v.nombre }}</code></td>
-                <td class="text-warning">{{ v.rango }}</td>
-                <td class="text-success">media ≈ 0, std ≈ 1</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="alert alert-secondary small mb-0 mt-3 py-2">
-          <i class="bi bi-info-circle me-1"></i>
-          K-Means usa distancia euclidiana. Sin escalar, <code>Annual Income</code> (hasta 137) dominaría sobre <code>Age</code> (hasta 70) y <code>Score</code> (hasta 100), sesgando el agrupamiento.
-        </div>
+      <div class="d-flex gap-2 align-items-start p-3 rounded" style="background:var(--accent-bg)">
+        <i class="bi bi-info-circle flex-shrink-0 mt-1" style="color:var(--accent)"></i>
+        <p class="text-secondary small mb-0">K-Means usa distancia euclidiana. Sin escalar, <code>Annual Income</code> (hasta 137) dominaría sobre <code>Age</code> (hasta 70) y <code>Score</code> (hasta 100), sesgando el agrupamiento.</p>
       </div>
     </div>
   </div>
@@ -544,59 +735,47 @@
 
 <!-- ══════════ 04 · K-MEANS ══════════ -->
 <section id="kmeans">
-  <div class="section-tag mb-1">04 · Conceptos principales de K-Means</div>
-  <h2 class="section-title mb-2">¿Cómo funciona el algoritmo?</h2>
-  <p class="section-lead mb-4">K-Means particiona el dataset en <em>k</em> grupos minimizando la varianza intra-cluster (inercia).</p>
-  <div class="row g-3">
+  <div class="section-tag mb-2">04 · Conceptos principales de K-Means</div>
+  <h2 class="section-title">¿Cómo funciona el algoritmo?</h2>
+  <p class="section-lead mb-5">K-Means particiona el dataset en <em>k</em> grupos minimizando la varianza intra-cluster (inercia).</p>
+  <div class="row g-5">
     <div class="col-lg-5">
-      <div class="card h-100">
-        <div class="card-header"><i class="bi bi-list-ol me-1"></i>Algoritmo paso a paso</div>
-        <div class="card-body d-flex flex-column gap-3">
-          {% set steps = [
-            ("Inicialización", "Se eligen k centroides iniciales usando K-Means++, que distribuye los puntos de inicio para reducir la probabilidad de converger a mínimos locales."),
-            ("Asignación", "Cada punto se asigna al centroide más cercano usando distancia euclidiana en el espacio normalizado."),
-            ("Actualización", "Cada centroide se recalcula como la media aritmética de todos los puntos de su clúster."),
-            ("Convergencia", "Los pasos 2 y 3 se repiten hasta que los centroides no cambien o se alcance el máximo de iteraciones.")
-          ] %}
-          {% for step in steps %}
-          <div class="d-flex gap-3">
-            <div class="step-circle">{{ loop.index }}</div>
-            <div>
-              <div class="fw-semibold small">{{ step[0] }}</div>
-              <div class="text-secondary small">{{ step[1] }}</div>
-            </div>
+      <p class="fw-semibold small mb-4"><i class="bi bi-list-ol me-2" style="color:var(--accent)"></i>Algoritmo paso a paso</p>
+      <div class="d-flex flex-column gap-4">
+        {% set steps = [
+          ("Inicialización", "Se eligen k centroides iniciales usando K-Means++, que distribuye los puntos de inicio para reducir la probabilidad de converger a mínimos locales."),
+          ("Asignación", "Cada punto se asigna al centroide más cercano usando distancia euclidiana en el espacio normalizado."),
+          ("Actualización", "Cada centroide se recalcula como la media aritmética de todos los puntos de su clúster."),
+          ("Convergencia", "Los pasos 2 y 3 se repiten hasta que los centroides no cambien o se alcance el máximo de iteraciones.")
+        ] %}
+        {% for step in steps %}
+        <div class="d-flex gap-3">
+          <div class="step-num">{{ loop.index }}</div>
+          <div>
+            <div class="fw-semibold small">{{ step[0] }}</div>
+            <div class="text-secondary small">{{ step[1] }}</div>
           </div>
-          {% endfor %}
         </div>
+        {% endfor %}
       </div>
     </div>
     <div class="col-lg-7">
-      <div class="row g-3 h-100">
-        <div class="col-12">
-          <div class="card p-3">
-            <h6 class="fw-bold mb-2">Función objetivo (WCSS)</h6>
-            <div class="text-center py-2 mb-2">
-              <code class="fs-5" style="color:var(--accent-soft)">J = Σⱼ Σᵢ ‖xᵢ − μⱼ‖²</code>
-            </div>
-            <p class="text-secondary small mb-0">Donde <code>xᵢ</code> son los puntos del clúster <em>j</em> y <code>μⱼ</code> su centroide. K-Means minimiza esta suma iterativamente.</p>
-          </div>
+      <p class="fw-semibold small mb-2">Función objetivo (WCSS)</p>
+      <div class="formula mb-2">J = Σⱼ Σᵢ ‖xᵢ − μⱼ‖²</div>
+      <p class="text-secondary small mb-5">Donde <code>xᵢ</code> son los puntos del clúster <em>j</em> y <code>μⱼ</code> su centroide. K-Means minimiza esta suma iterativamente.</p>
+
+      <div class="section-divider"></div>
+      <p class="fw-semibold small mb-3">Ventajas y limitaciones</p>
+      <div class="row g-2">
+        <div class="col-md-6">
+          <div class="small check-ok mb-2"><i class="bi bi-check-circle me-2"></i>Rápido y escalable</div>
+          <div class="small check-ok mb-2"><i class="bi bi-check-circle me-2"></i>Fácil de interpretar</div>
+          <div class="small check-ok"><i class="bi bi-check-circle me-2"></i>Resultados reproducibles</div>
         </div>
-        <div class="col-12">
-          <div class="card p-3">
-            <h6 class="fw-bold mb-3">Ventajas y limitaciones</h6>
-            <div class="row g-2">
-              <div class="col-6">
-                <div class="small text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Rápido y escalable</div>
-                <div class="small text-success mb-1"><i class="bi bi-check-circle-fill me-1"></i>Fácil de interpretar</div>
-                <div class="small text-success"><i class="bi bi-check-circle-fill me-1"></i>Resultados reproducibles</div>
-              </div>
-              <div class="col-6">
-                <div class="small text-danger mb-1"><i class="bi bi-x-circle-fill me-1"></i>Requiere definir k</div>
-                <div class="small text-danger mb-1"><i class="bi bi-x-circle-fill me-1"></i>Sensible a outliers</div>
-                <div class="small text-danger"><i class="bi bi-x-circle-fill me-1"></i>Solo clústeres convexos</div>
-              </div>
-            </div>
-          </div>
+        <div class="col-md-6">
+          <div class="small text-danger mb-2"><i class="bi bi-x-circle me-2"></i>Requiere definir k de antemano</div>
+          <div class="small text-danger mb-2"><i class="bi bi-x-circle me-2"></i>Sensible a la escala de los datos</div>
+          <div class="small text-danger"><i class="bi bi-x-circle me-2"></i>Solo clústeres de forma convexa</div>
         </div>
       </div>
     </div>
@@ -605,47 +784,48 @@
 
 <!-- ══════════ 05 · EJECUCIÓN ══════════ -->
 <section id="ejecucion">
-  <div class="section-tag mb-1">05 · Ejecución del modelo</div>
-  <h2 class="section-title mb-2">Preprocesamiento y entrenamiento</h2>
-  <p class="section-lead mb-4">Flujo completo desde la carga del dataset hasta la obtención de los clústeres.</p>
-  <div class="row g-3">
+  <div class="section-tag mb-2">05 · Ejecución del modelo</div>
+  <h2 class="section-title">Preprocesamiento y entrenamiento</h2>
+  <p class="section-lead mb-5">Flujo completo desde la carga del dataset hasta la obtención de los clústeres.</p>
+  <div class="row g-5">
     <div class="col-lg-5">
-      <div class="card mb-3">
-        <div class="card-header"><i class="bi bi-sliders me-1"></i>Parámetros del modelo</div>
-        <div class="card-body">
-          <table class="table table-sm mb-0">
-            <tbody>
-              <tr><td><code>n_clusters</code></td><td class="text-info fw-bold">5</td><td class="text-secondary small">determinado por método del codo</td></tr>
-              <tr><td><code>random_state</code></td><td class="text-info fw-bold">42</td><td class="text-secondary small">reproducibilidad garantizada</td></tr>
-              <tr><td><code>n_init</code></td><td class="text-info fw-bold">10</td><td class="text-secondary small">10 inicializaciones; se conserva la mejor</td></tr>
-              <tr><td><code>init</code></td><td class="text-info fw-bold">'k-means++'</td><td class="text-secondary small">inicialización inteligente</td></tr>
-              <tr><td><code>scaler</code></td><td class="text-info fw-bold">StandardScaler</td><td class="text-secondary small">μ=0, σ=1 por columna</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <p class="fw-semibold small mb-3"><i class="bi bi-sliders me-2" style="color:var(--accent)"></i>Parámetros del modelo</p>
+      <div class="table-responsive mb-4">
+        <table class="table table-sm mb-0">
+          <tbody>
+            <tr><td><span class="param-key">n_clusters</span></td><td class="fw-semibold small">5</td><td class="text-secondary small">por método del codo</td></tr>
+            <tr><td><span class="param-key">random_state</span></td><td class="fw-semibold small">42</td><td class="text-secondary small">reproducibilidad</td></tr>
+            <tr><td><span class="param-key">n_init</span></td><td class="fw-semibold small">10</td><td class="text-secondary small">se conserva la mejor</td></tr>
+            <tr><td><span class="param-key">init</span></td><td class="fw-semibold small">'k-means++'</td><td class="text-secondary small">inicialización inteligente</td></tr>
+            <tr><td><span class="param-key">scaler</span></td><td class="fw-semibold small">StandardScaler</td><td class="text-secondary small">μ=0, σ=1 por columna</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="card p-3">
-        <h6 class="fw-bold mb-3">Resultado del entrenamiento</h6>
-        <div class="row g-2 text-center">
-          <div class="col-4">
-            <div class="stat-num" style="color:var(--accent-soft)">{{ inertia }}</div>
-            <div class="stat-lbl">Inercia final</div>
+      <div class="section-divider"></div>
+      <p class="fw-semibold small mb-3 mt-4">Resultado del entrenamiento</p>
+      <div class="row g-3 text-center">
+        <div class="col-4">
+          <div class="kpi-box">
+            <div class="stat-num" style="font-size:1.6rem">{{ inertia }}</div>
+            <div class="stat-lbl">Inercia</div>
           </div>
-          <div class="col-4">
-            <div class="stat-num" style="color:#2ecc71">{{ nClusters }}</div>
+        </div>
+        <div class="col-4">
+          <div class="kpi-box">
+            <div class="stat-num" style="font-size:1.6rem">{{ nClusters }}</div>
             <div class="stat-lbl">Clústeres</div>
           </div>
-          <div class="col-4">
-            <div class="stat-num" style="color:#f39c12">{{ total }}</div>
+        </div>
+        <div class="col-4">
+          <div class="kpi-box">
+            <div class="stat-num" style="font-size:1.6rem">{{ total }}</div>
             <div class="stat-lbl">Registros</div>
           </div>
         </div>
       </div>
     </div>
     <div class="col-lg-7">
-      <div class="card h-100">
-        <div class="card-header"><i class="bi bi-code-slash me-1"></i>Implementación en Python</div>
-        <div class="card-body p-3">
+      <p class="fw-semibold small mb-3"><i class="bi bi-code-slash me-2" style="color:var(--accent)"></i>Implementación en Python</p>
 <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
 <span class="kw">from</span> sklearn.cluster <span class="kw">import</span> <span class="fn">KMeans</span>
 <span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> <span class="fn">StandardScaler</span>
@@ -672,115 +852,86 @@ df[<span class="st">"Cluster"</span>] = modelo.<span class="fn">fit_predict</spa
 centroides = scaler.<span class="fn">inverse_transform</span>(
     modelo.cluster_centers_
 )</pre>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════ 06 · CLUSTERS ══════════ -->
 <section id="clusters">
-  <div class="section-tag mb-1">06 · Visualización de clústeres</div>
-  <h2 class="section-title mb-2">Distribución de los grupos</h2>
-  <p class="section-lead mb-4">Gráficas de dispersión coloreadas por clúster. La combinación Ingreso vs. Score es la más informativa para identificar los segmentos.</p>
-  <div class="card mb-3">
-    <div class="card-body">
-      <div class="chart-lbl"><i class="bi bi-scatter-chart me-1"></i>Ingreso Anual (k$) vs. Puntaje de Gasto — vista principal</div>
-      <canvas id="scatterClusters" height="65"></canvas>
-    </div>
+  <div class="section-tag mb-2">06 · Visualización de clústeres</div>
+  <h2 class="section-title">Distribución de los grupos</h2>
+  <p class="section-lead mb-5">Gráficas de dispersión coloreadas por clúster. La combinación Ingreso vs. Score es la más informativa para identificar los segmentos.</p>
+  <div class="mb-4">
+    <div class="chart-lbl"><i class="bi bi-scatter-chart"></i>Ingreso Anual (k$) vs. Puntaje de Gasto — vista principal</div>
+    <canvas id="scatterClusters" height="65"></canvas>
   </div>
-  <div class="row g-3">
+  <div class="row g-4">
     <div class="col-md-6">
-      <div class="card">
-        <div class="card-body">
-          <div class="chart-lbl">Ingreso Anual vs. Edad</div>
-          <canvas id="scatterIngEdad"></canvas>
-        </div>
-      </div>
+      <div class="chart-lbl">Ingreso Anual vs. Edad</div>
+      <canvas id="scatterIngEdad"></canvas>
     </div>
     <div class="col-md-6">
-      <div class="card">
-        <div class="card-body">
-          <div class="chart-lbl">Puntaje de Gasto vs. Edad</div>
-          <canvas id="scatterScoreEdad"></canvas>
-        </div>
-      </div>
+      <div class="chart-lbl">Puntaje de Gasto vs. Edad</div>
+      <canvas id="scatterScoreEdad"></canvas>
     </div>
   </div>
 </section>
 
 <!-- ══════════ 07 · CENTROIDES ══════════ -->
 <section id="centroides">
-  <div class="section-tag mb-1">07 · Visualización de centroides</div>
-  <h2 class="section-title mb-2">Posición de los centroides</h2>
-  <p class="section-lead mb-4">Los centroides (★) representan el punto medio de cada clúster en el espacio de características. Son la "firma" cuantitativa de cada segmento.</p>
-  <div class="card mb-3">
-    <div class="card-body">
-      <div class="chart-lbl"><i class="bi bi-geo-alt me-1"></i>Clústeres + centroides (★) — Ingreso vs. Score</div>
-      <canvas id="scatterCentroides" height="65"></canvas>
-    </div>
+  <div class="section-tag mb-2">07 · Visualización de centroides</div>
+  <h2 class="section-title">Posición de los centroides</h2>
+  <p class="section-lead mb-5">Los centroides (★) representan el punto medio de cada clúster en el espacio de características. Son la firma cuantitativa de cada segmento.</p>
+  <div class="mb-4">
+    <div class="chart-lbl"><i class="bi bi-geo-alt"></i>Clústeres + centroides (★) — Ingreso vs. Score</div>
+    <canvas id="scatterCentroides" height="65"></canvas>
   </div>
-  <div class="card">
-    <div class="card-header"><i class="bi bi-pin-map me-1"></i>Coordenadas de los centroides (escala original)</div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-sm mb-0">
-          <thead><tr><th>Clúster</th><th>Perfil</th><th>Edad</th><th>Ingreso (k$)</th><th>Score</th><th>Clientes</th></tr></thead>
-          <tbody>
-            {% for c in clusters %}
-            <tr>
-              <td><span class="dot" style="background:{{ c.color }}"></span>{{ c.label }}</td>
-              <td><span style="color:{{ c.color }}; font-weight:600">{{ c.nombre }}</span></td>
-              <td>{{ c.centroide.age }}</td>
-              <td>{{ c.centroide.income }}</td>
-              <td>{{ c.centroide.score }}</td>
-              <td><span class="badge" style="background:{{ c.color }}33; color:{{ c.color }}">{{ c.count }}</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <div class="block-header mt-5"><i class="bi bi-pin-map"></i>Coordenadas de los centroides (escala original)</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Clúster</th><th>Perfil</th><th>Edad</th><th>Ingreso (k$)</th><th>Score</th><th>Clientes</th></tr></thead>
+      <tbody>
+        {% for c in clusters %}
+        <tr>
+          <td><span class="dot" style="background:{{ c.color }}"></span>{{ c.label }}</td>
+          <td><span style="color:{{ c.color }}; font-weight:600">{{ c.nombre }}</span></td>
+          <td>{{ c.centroide.age }}</td>
+          <td>{{ c.centroide.income }}</td>
+          <td>{{ c.centroide.score }}</td>
+          <td><span class="badge rounded-pill" style="background:{{ c.color }}22; color:{{ c.color }}; border:1px solid {{ c.color }}44">{{ c.count }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </section>
 
 <!-- ══════════ 08 · CODO ══════════ -->
 <section id="codo">
-  <div class="section-tag mb-1">08 · Método del codo</div>
-  <h2 class="section-title mb-2">Selección del número óptimo de clústeres</h2>
-  <p class="section-lead mb-4">El método del codo evalúa la inercia para distintos valores de <em>k</em>. Se elige el punto donde agregar más clústeres deja de reducir la inercia significativamente.</p>
-  <div class="row g-3 align-items-stretch">
+  <div class="section-tag mb-2">08 · Método del codo</div>
+  <h2 class="section-title">Selección del número óptimo de clústeres</h2>
+  <p class="section-lead mb-5">El método del codo evalúa la inercia para distintos valores de <em>k</em>. Se elige el punto donde agregar más clústeres deja de reducir la inercia significativamente.</p>
+  <div class="row g-5 align-items-start">
     <div class="col-lg-8">
-      <div class="card h-100">
-        <div class="card-body">
-          <div class="chart-lbl"><i class="bi bi-graph-down me-1"></i>Inercia (WCSS) vs. número de clústeres k</div>
-          <canvas id="chartCodo"></canvas>
-        </div>
-      </div>
+      <div class="chart-lbl"><i class="bi bi-graph-down"></i>Inercia (WCSS) vs. número de clústeres k</div>
+      <canvas id="chartCodo"></canvas>
     </div>
     <div class="col-lg-4">
-      <div class="card h-100 p-3 d-flex flex-column gap-3">
-        <div>
-          <h6 class="fw-bold mb-1">¿Por qué k = {{ nClusters }}?</h6>
-          <p class="text-secondary small mb-0">
-            Analizando la curva, se observa que la reducción de inercia es muy pronunciada de k=1 a k=5.
-            A partir de k=5 la curva se aplana: añadir más clústeres reduce la inercia de forma marginal
-            sin aportar segmentos interpretables adicionales. Esto indica que <strong>k=5 es el punto de inflexión óptimo</strong>.
-          </p>
-        </div>
-        <div>
-          <h6 class="fw-bold mb-1">Justificación adicional</h6>
-          <p class="text-secondary small mb-0">
-            Con k=5 se obtienen segmentos con significado de negocio claro y diferenciable:
-            clientes premium, conservadores, impulsivos, estándar y ahorradores.
-            Aumentar k fragmentaría grupos naturales sin mejorar la interpretabilidad.
-          </p>
-        </div>
-        <div class="card p-3 mt-auto" style="background:#0d1117">
-          <div class="text-secondary small mb-1">Clústeres seleccionados</div>
-          <div class="stat-num" style="font-size:3rem; color:var(--accent-soft)">{{ nClusters }}</div>
-          <div class="text-secondary small mt-1">Inercia final: <strong class="text-light">{{ inertia }}</strong></div>
-        </div>
+      <p class="fw-semibold small mb-2">¿Por qué k = {{ nClusters }}?</p>
+      <p class="text-secondary small mb-4">
+        Analizando la curva, se observa que la reducción de inercia es pronunciada de k=1 a k=5.
+        A partir de k=5 la curva se aplana: añadir más clústeres reduce la inercia de forma marginal
+        sin aportar segmentos interpretables adicionales. Esto indica que <strong>k=5 es el punto de inflexión óptimo</strong>.
+      </p>
+      <p class="fw-semibold small mb-2">Justificación adicional</p>
+      <p class="text-secondary small mb-4">
+        Con k=5 se obtienen segmentos con significado de negocio claro: clientes premium, conservadores,
+        impulsivos, estándar y ahorradores. Aumentar k fragmentaría grupos naturales sin mejorar la interpretabilidad.
+      </p>
+      <div class="kpi-box text-center">
+        <div class="stat-lbl mb-1">Clústeres seleccionados</div>
+        <div class="stat-num" style="font-size:3rem">{{ nClusters }}</div>
+        <div class="stat-sub mt-1">Inercia final: <strong>{{ inertia }}</strong></div>
       </div>
     </div>
   </div>
@@ -788,25 +939,25 @@ centroides = scaler.<span class="fn">inverse_transform</span>(
 
 <!-- ══════════ 09 · INTERPRETACIÓN ══════════ -->
 <section id="interpretacion">
-  <div class="section-tag mb-1">09 · Interpretación de resultados</div>
-  <h2 class="section-title mb-2">Perfil de cada segmento</h2>
-  <p class="section-lead mb-4">Análisis cualitativo de los {{ nClusters }} grupos identificados, basado en los valores de los centroides y la distribución de clientes.</p>
+  <div class="section-tag mb-2">09 · Interpretación de resultados</div>
+  <h2 class="section-title">Perfil de cada segmento</h2>
+  <p class="section-lead mb-5">Análisis cualitativo de los {{ nClusters }} grupos identificados, basado en los valores de los centroides y la distribución de clientes.</p>
   <div class="row g-3">
     {% for c in clusters %}
     <div class="col-md-6 col-xl-4">
       <div class="interp-card" style="border-left-color:{{ c.color }}">
-        <div class="d-flex align-items-center gap-2 mb-1">
-          <span class="dot" style="background:{{ c.color }}; width:13px; height:13px"></span>
-          <h5 class="mb-0 fw-bold">{{ c.nombre }}</h5>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="dot" style="background:{{ c.color }}; width:11px; height:11px; flex-shrink:0"></span>
+          <h6 class="mb-0 fw-bold">{{ c.nombre }}</h6>
         </div>
-        <div class="text-secondary small mb-2">
-          {{ c.label }} &nbsp;·&nbsp; {{ c.count }} clientes &nbsp;·&nbsp; {{ "%.1f"|format(c.count / total * 100) }}% del total
-        </div>
+        <p class="text-secondary small mb-1" style="font-size:.75rem">
+          {{ c.label }} &nbsp;·&nbsp; {{ c.count }} clientes &nbsp;·&nbsp; {{ "%.1f"|format(c.count / total * 100) }}%
+        </p>
         <p class="text-secondary small mb-3">{{ c.descripcion }}</p>
         <div class="d-flex flex-wrap gap-2">
-          <span class="badge bg-secondary">Edad {{ c.centroide.age }}</span>
-          <span class="badge bg-secondary">Ingreso {{ c.centroide.income }} k$</span>
-          <span class="badge bg-secondary">Score {{ c.centroide.score }}</span>
+          <span class="badge rounded-pill" style="background:{{ c.color }}15; color:{{ c.color }}; border:1px solid {{ c.color }}33; font-weight:500">Edad {{ c.centroide.age }}</span>
+          <span class="badge rounded-pill" style="background:{{ c.color }}15; color:{{ c.color }}; border:1px solid {{ c.color }}33; font-weight:500">{{ c.centroide.income }} k$</span>
+          <span class="badge rounded-pill" style="background:{{ c.color }}15; color:{{ c.color }}; border:1px solid {{ c.color }}33; font-weight:500">Score {{ c.centroide.score }}</span>
         </div>
       </div>
     </div>
@@ -816,20 +967,18 @@ centroides = scaler.<span class="fn">inverse_transform</span>(
 
 <!-- ══════════ 10 · DATOS ══════════ -->
 <section id="datos">
-  <div class="section-tag mb-1">10 · Datos procesados</div>
-  <h2 class="section-title mb-2">Tabla de resultados</h2>
+  <div class="section-tag mb-2">10 · Datos procesados</div>
+  <h2 class="section-title">Tabla de resultados</h2>
   <p class="section-lead mb-4">Los {{ total }} clientes con el clúster asignado por el modelo.</p>
   <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
     <input id="search-input" type="text" placeholder="Buscar por ID, género, edad…"/>
     <span id="table-info" class="text-secondary small"></span>
   </div>
-  <div class="card p-0 overflow-hidden mb-3">
-    <div class="table-responsive">
-      <table class="table table-sm table-hover mb-0">
-        <thead><tr><th>ID</th><th>Género</th><th>Edad</th><th>Ingreso (k$)</th><th>Score</th><th>Clúster</th></tr></thead>
-        <tbody id="table-body"></tbody>
-      </table>
-    </div>
+  <div class="table-responsive mb-3">
+    <table class="table table-sm table-hover mb-0">
+      <thead><tr><th>ID</th><th>Género</th><th>Edad</th><th>Ingreso (k$)</th><th>Score</th><th>Clúster</th></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
   </div>
   <div id="pagination" class="d-flex flex-wrap gap-1"></div>
 </section>
@@ -847,27 +996,26 @@ const clusters  = {{ clusters_json | safe }};
 const codoData  = {{ codo_json | safe }};
 const tableData = {{ tabla | tojson }};
 
-const gridColor = 'rgba(255,255,255,0.05)';
-const tickColor = '#8b949e';
+const gridColor = 'rgba(0,0,0,0.06)';
+const tickColor = '#64748b';
 
 function baseOpts(xlabel, ylabel) {
   return {
     responsive: true,
     plugins: {
-      legend: { labels: { color: '#c9d1d9', boxWidth: 12, font: { size: 12 } } },
+      legend: { labels: { color: '#475569', boxWidth: 12, font: { size: 12, family: 'Inter' } } },
       tooltip: { callbacks: { label: ctx => {
         const p = ctx.raw;
         return ` Income: ${p.x ?? ''}  Score: ${p.y ?? ''}${p.age !== undefined ? '  Edad: '+p.age : ''}`;
       }}}
     },
     scales: {
-      x: { title: { display: true, text: xlabel, color: tickColor }, ticks: { color: tickColor }, grid: { color: gridColor } },
-      y: { title: { display: true, text: ylabel, color: tickColor }, ticks: { color: tickColor }, grid: { color: gridColor } },
+      x: { title: { display: true, text: xlabel, color: tickColor, font: { family: 'Inter' } }, ticks: { color: tickColor }, grid: { color: gridColor } },
+      y: { title: { display: true, text: ylabel, color: tickColor, font: { family: 'Inter' } }, ticks: { color: tickColor }, grid: { color: gridColor } },
     }
   };
 }
 
-// 06a — Income vs Score
 new Chart(document.getElementById('scatterClusters'), {
   type: 'scatter',
   data: { datasets: clusters.map(c => ({
@@ -878,7 +1026,6 @@ new Chart(document.getElementById('scatterClusters'), {
   options: baseOpts('Ingreso Anual (k$)', 'Puntaje de Gasto (1-100)'),
 });
 
-// 06b — Income vs Age
 new Chart(document.getElementById('scatterIngEdad'), {
   type: 'scatter',
   data: { datasets: clusters.map(c => ({
@@ -889,7 +1036,6 @@ new Chart(document.getElementById('scatterIngEdad'), {
   options: baseOpts('Ingreso Anual (k$)', 'Edad'),
 });
 
-// 06c — Score vs Age
 new Chart(document.getElementById('scatterScoreEdad'), {
   type: 'scatter',
   data: { datasets: clusters.map(c => ({
@@ -900,7 +1046,6 @@ new Chart(document.getElementById('scatterScoreEdad'), {
   options: baseOpts('Puntaje de Gasto (1-100)', 'Edad'),
 });
 
-// 07 — Centroides
 const dsPoints = clusters.map(c => ({
   label: c.label, order: 1,
   data: c.puntos.map(p => ({ x: p.x, y: p.y })),
@@ -918,25 +1063,23 @@ new Chart(document.getElementById('scatterCentroides'), {
   options: baseOpts('Ingreso Anual (k$)', 'Puntaje de Gasto (1-100)'),
 });
 
-// 08 — Codo
 new Chart(document.getElementById('chartCodo'), {
   type: 'line',
   data: {
     labels: codoData.k,
     datasets: [{
       label: 'Inercia (WCSS)', data: codoData.inertia,
-      borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.12)',
+      borderColor: '#4361ee', backgroundColor: 'rgba(67,97,238,.08)',
       borderWidth: 2.5, fill: true, tension: 0.3,
-      pointBackgroundColor: codoData.k.map(k => k === {{ nClusters }} ? '#f39c12' : '#6366f1'),
+      pointBackgroundColor: codoData.k.map(k => k === {{ nClusters }} ? '#d97706' : '#4361ee'),
       pointRadius:          codoData.k.map(k => k === {{ nClusters }} ? 9 : 4),
     }]
   },
   options: {
     responsive: true,
     plugins: {
-      legend: { labels: { color: '#c9d1d9' } },
+      legend: { labels: { color: '#475569', font: { family: 'Inter' } } },
       tooltip: { callbacks: { label: ctx => ` Inercia: ${ctx.raw}` } },
-      annotation: {},
     },
     scales: {
       x: { title: { display: true, text: 'Número de clústeres (k)', color: tickColor }, ticks: { color: tickColor }, grid: { color: gridColor } },
@@ -945,13 +1088,13 @@ new Chart(document.getElementById('chartCodo'), {
   }
 });
 
-// 10 — Tabla paginada
+// Tabla paginada
 const PAGE = 20;
 let filtered = tableData, page = 1;
 
 function clusterColor(cid) {
   const c = clusters.find(x => x.id === cid - 1);
-  return c ? c.color : '#888';
+  return c ? c.color : '#64748b';
 }
 
 function renderTable() {
@@ -961,7 +1104,7 @@ function renderTable() {
       <tr>
         <td>${r.CustomerID}</td><td>${r.Gender}</td><td>${r.Age}</td>
         <td>${r.Income}</td><td>${r.Score}</td>
-        <td><span class="badge rounded-pill" style="background:${clusterColor(r.Cluster)}33;color:${clusterColor(r.Cluster)};border:1px solid ${clusterColor(r.Cluster)}66">C${r.Cluster}</span></td>
+        <td><span class="badge rounded-pill" style="background:${clusterColor(r.Cluster)}18;color:${clusterColor(r.Cluster)};border:1px solid ${clusterColor(r.Cluster)}44;font-weight:500">C${r.Cluster}</span></td>
       </tr>`).join('');
   document.getElementById('table-info').textContent =
     `${filtered.length} registros · página ${page} de ${Math.ceil(filtered.length / PAGE)}`;
