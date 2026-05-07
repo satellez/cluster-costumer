@@ -6,6 +6,9 @@ URL_DATASET = "https://raw.githubusercontent.com/gakudo-ai/open-datasets/refs/he
 
 COLORES = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6"]
 
+# Caché en memoria: el modelo se entrena una sola vez por proceso del servidor
+_cache: dict = {}
+
 
 def _etiqueta(income, score):
     if income > 65 and score > 60:
@@ -129,6 +132,10 @@ def LimpiarYSeleccionar():
 
 
 def RealizarClustering(nClusters=5):
+    cache_key = f"clustering_{nClusters}"
+    if cache_key in _cache:
+        return _cache[cache_key]
+
     df, reporte_limpieza = LimpiarYSeleccionar()
     features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
     X = df[features].values
@@ -189,7 +196,7 @@ def RealizarClustering(nClusters=5):
         "genero_m":    int((df["Gender"] == "Male").sum()),
     }
 
-    return {
+    result = {
         "clusters":         clusters,
         "nClusters":        nClusters,
         "total":            len(df),
@@ -198,9 +205,15 @@ def RealizarClustering(nClusters=5):
         "inertia":          round(float(modelo.inertia_), 2),
         "reporte_limpieza": reporte_limpieza,
     }
+    _cache[cache_key] = result
+    return result
 
 
 def MetodoDelCodo(max_k=10):
+    cache_key = f"codo_{max_k}"
+    if cache_key in _cache:
+        return _cache[cache_key]
+
     df, _ = LimpiarYSeleccionar()
     features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
     X = StandardScaler().fit_transform(df[features].values)
@@ -209,4 +222,7 @@ def MetodoDelCodo(max_k=10):
         km = KMeans(n_clusters=k, random_state=42, n_init=10)
         km.fit(X)
         inertias.append(round(float(km.inertia_), 2))
-    return {"k": list(range(1, max_k + 1)), "inertia": inertias}
+
+    result = {"k": list(range(1, max_k + 1)), "inertia": inertias}
+    _cache[cache_key] = result
+    return result
