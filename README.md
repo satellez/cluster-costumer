@@ -60,26 +60,29 @@ La aplicación web presenta de forma didáctica todo el flujo del proyecto:
 
 ```
 flask_app/
-│
-├── app.py                  # Punto de entrada de la aplicación
-├── cluster.py              # Lógica de clustering (limpieza, modelo, codo)
-├── config.py               # Configuración por entornos
-├── requirements.txt        # Dependencias Python
-│
-├── routes/
-│   ├── __init__.py
-│   ├── main.py             # Ruta principal (renderiza el template)
-│   └── api.py              # Endpoint de estado /api/status
-│
-├── templates/
-│   └── index.html          # Template único con toda la aplicación
-│
-├── static/
-│   ├── css/styles.css
-│   └── js/main.js
-│
-├── .env.example            # Plantilla de variables de entorno
-└── .gitignore
+└── cluster-costumer/               ← raíz del proyecto
+    │
+    ├── app.py                      # Punto de entrada de la aplicación
+    ├── cluster.py                  # Lógica de clustering (limpieza, modelo, codo)
+    ├── config.py                   # Configuración por entornos
+    ├── requirements.txt            # Dependencias Python
+    │
+    ├── routes/
+    │   ├── __init__.py
+    │   ├── main.py                 # Ruta principal (renderiza el template)
+    │   └── api.py                  # Endpoint de estado /api/status
+    │
+    ├── templates/
+    │   └── index.html              # Template único con toda la aplicación
+    │
+    ├── static/
+    │   ├── css/styles.css
+    │   └── js/main.js
+    │
+    ├── venv/                       # Entorno virtual (no se sube a git)
+    ├── .env                        # Variables de entorno locales (no se sube a git)
+    ├── .env.example                # Plantilla de variables de entorno
+    └── .gitignore
 ```
 
 ---
@@ -90,7 +93,7 @@ flask_app/
 
 ```bash
 git clone <url-del-repositorio>
-cd flask_app
+cd flask_app/cluster-costumer
 ```
 
 ### 2. Crear y activar el entorno virtual
@@ -114,19 +117,25 @@ pip install -r requirements.txt
 ### 4. Configurar variables de entorno
 
 ```bash
+# Windows
+copy .env.example .env
+
+# Linux / macOS
 cp .env.example .env
+
 # Editar .env con los valores correspondientes
 ```
 
 ### 5. Ejecutar la aplicación
 
 ```bash
+# Desde flask_app/cluster-costumer/
 python app.py
 ```
 
 La aplicación estará disponible en: **http://localhost:8000**
 
-> **Nota:** La primera carga puede tardar unos segundos mientras se descarga el dataset y se entrena el modelo.
+> **Nota:** La primera carga puede tardar unos segundos mientras se descarga el dataset desde GitHub y se entrena el modelo K-Means.
 
 ---
 
