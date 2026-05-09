@@ -1055,7 +1055,7 @@ dsPoints.push({
   label: 'Centroides ★', order: 0,
   data: clusters.map(c => ({ x: c.centroide.income, y: c.centroide.score })),
   backgroundColor: clusters.map(c => c.color),
-  borderColor: '#fff', borderWidth: 2,
+  borderColor: '#1e293b', borderWidth: 2,
   pointStyle: 'star', pointRadius: 14, showLine: false,
 });
 new Chart(document.getElementById('scatterCentroides'), {
