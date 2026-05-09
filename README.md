@@ -4,13 +4,7 @@ Proyecto de aprendizaje automático no supervisado desarrollado como trabajo pr�
 
 ---
 
-## Integrantes
 
-| Nombre | Rol |
-|--------|-----|
-| _(Integrante 1)_ | Modelado y clustering |
-| _(Integrante 2)_ | Desarrollo web / Flask |
-| _(Integrante 3)_ | Análisis y visualización |
 
 ---
 
