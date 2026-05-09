@@ -19,7 +19,6 @@ def create_app():
     return app
 
 
-# Expuesto a nivel de módulo para que gunicorn lo encuentre
 app = create_app()
 
 if __name__ == '__main__':

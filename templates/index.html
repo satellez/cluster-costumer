@@ -1132,8 +1132,16 @@ document.getElementById('search-input').addEventListener('input', e => {
 
 renderTable();
 
-// Scrollspy
 const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+
+navLinks.forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting)

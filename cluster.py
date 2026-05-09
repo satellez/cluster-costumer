@@ -6,7 +6,6 @@ URL_DATASET = "https://raw.githubusercontent.com/gakudo-ai/open-datasets/refs/he
 
 COLORES = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6"]
 
-# Caché en memoria: el modelo se entrena una sola vez por proceso del servidor
 _cache: dict = {}
 
 
@@ -41,20 +40,16 @@ def LimpiarYSeleccionar():
         "columnas": list(df.columns),
     }
 
-    # ── Nulos ──
     nulos = df.isnull().sum()
     reporte["nulos"] = {col: int(v) for col, v in nulos.items()}
     reporte["total_nulos"] = int(nulos.sum())
 
-    # ── Duplicados ──
     reporte["duplicados"] = int(df.duplicated().sum())
 
-    # ── Limpieza ──
     df_clean = df.drop_duplicates().dropna().reset_index(drop=True)
     reporte["filas_limpias"] = len(df_clean)
     reporte["filas_eliminadas"] = reporte["filas_originales"] - reporte["filas_limpias"]
 
-    # ── Outliers por IQR ──
     features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
     outliers_info = []
     for col in features:
@@ -77,7 +72,6 @@ def LimpiarYSeleccionar():
         })
     reporte["outliers"] = outliers_info
 
-    # ── Variables excluidas ──
     reporte["vars_excluidas"] = [
         {
             "nombre": "CustomerID",
@@ -91,7 +85,6 @@ def LimpiarYSeleccionar():
         },
     ]
 
-    # ── Variables seleccionadas ──
     reporte["vars_seleccionadas"] = [
         {
             "nombre":     "Age",
@@ -116,7 +109,6 @@ def LimpiarYSeleccionar():
         },
     ]
 
-    # ── Normalización ──
     reporte["normalizacion"] = {
         "metodo":  "StandardScaler (Z-score)",
         "formula": "z = (x − μ) / σ",
